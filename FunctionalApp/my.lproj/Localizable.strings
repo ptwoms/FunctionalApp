@@ -1,0 +1,17 @@
+/* 
+  Localizable.strings
+  FunctionalApp
+
+  Created by Pyae Phyo Myint Soe on 14/3/16.
+  Copyright © 2016 PYAE PHYO MYINT SOE. All rights reserved.
+*/
+
+"new_notebook" = "New Notebook";
+"error" = "Error";
+"notebooks" = "Notebooks";
+"notebook_already_exists" = "Notebook with the same name already exists!";
+"notebook_name" = "မှတ်စုစာအုပ်နာမည်";
+"enter_name_for_notebook" = "Enter a name for the notebook";
+"save" = "သိမ်းရန်";
+"cancel" = "ဖျက်သိမ်း";
+"ok" = "အိုကေ";

@@ -1,0 +1,21 @@
+/* 
+  Localizable.strings
+  FunctionalApp
+
+  Created by Pyae Phyo Myint Soe on 14/3/16.
+  Copyright © 2016 PYAE PHYO MYINT SOE. All rights reserved.
+*/
+
+"new_notebook" = "New Notebook";
+"error" = "Error";
+"notebooks" = "Notebooks";
+"notebook_already_exists" = "Notebook with the same name already exists!";
+"notebook_name" = "Notebook Name";
+"enter_name_for_notebook" = "Enter a name for the notebook";
+"save" = "Save";
+"cancel" = "Cancel";
+"ok" = "Ok";
+
+"delete" = "Delete";
+"warning" = "Warning";
+"delete_notebook_message" = "Deleting notebook will delete all the notes inside.\nAre you sure to delete it?";

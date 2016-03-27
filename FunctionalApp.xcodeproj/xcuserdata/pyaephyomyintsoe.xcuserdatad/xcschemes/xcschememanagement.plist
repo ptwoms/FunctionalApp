@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>SchemeUserState</key>
+	<dict>
+		<key>FunctionalApp.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>0</integer>
+		</dict>
+		<key>FunctionalTvOS.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>2</integer>
+		</dict>
+		<key>FunctionalWatch.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
+	</dict>
+	<key>SuppressBuildableAutocreation</key>
+	<dict>
+		<key>993604711C8F24E3003B5210</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>9936048B1C8F2515003B5210</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>993604B21C8F253F003B5210</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>993604C31C8F25A0003B5210</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>993EBFEB1CA4F39B004FC2CC</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+	</dict>
+</dict>
+</plist>
