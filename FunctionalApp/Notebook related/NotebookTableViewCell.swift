@@ -12,7 +12,9 @@ class NotebookTableViewCell: UITableViewCell {
     var notebook : Notebook?{
         didSet{
             self.textLabel?.text = notebook?.name
-            detailTextLabel?.text = "\(notebook?.numberOfNotes == nil ? 0 : notebook!.numberOfNotes!.integerValue)"
+//            detailTextLabel?.text = "\(notebook?.notes == nil ? 0 : notebook!.notes!.count)"
+            //instead of counting every time, u easily can do this in case calling notes! will load the records that may not be needed
+            detailTextLabel?.text = "\(notebook?.numberOfNotes == nil ? 0 : notebook!.numberOfNotes!.intValue)"
         }
     }
 
@@ -23,8 +25,6 @@ class NotebookTableViewCell: UITableViewCell {
 
     override func setSelected(selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-
-        // Configure the view for the selected state
     }
 
 }

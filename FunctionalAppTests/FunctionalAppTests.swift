@@ -23,9 +23,6 @@ class FunctionalAppTests: XCTestCase {
     func testExample() {
         // This is an example of a functional test case.
         // Use XCTAssert and related functions to verify your tests produce the correct results.
-        let scrollView = UIScrollView()
-        scrollView.contentSize = CGSize(width: 400,height: 500)
-        UIScrollView().zoomOutWithCenterPoint(CGPointZero, forScale: 1, animated : true)
     }
     
     func testPerformanceExample() {

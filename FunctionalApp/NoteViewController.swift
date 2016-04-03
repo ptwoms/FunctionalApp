@@ -10,14 +10,17 @@ import UIKit
 import CoreData
 
 protocol NoteViewControllerDelegate : class {
-    func noteCreated()
-    func noteDeleted()
+    func noteCreated(newNote : Note)
+    func noteUpdated(updatedNote : Note)
+    func noteDeleted(noteDeleted : Note)
 }
 
 class NoteViewController: UIViewController, UINavigationControllerDelegate {
     @IBOutlet weak var textViewBottomConstraint: NSLayoutConstraint!
     @IBOutlet weak var textView: UITextView!
     var saveButtonItem : UIBarButtonItem!
+    var isEdited : Bool = false
+    @IBOutlet var tapGestureRecognizer: UITapGestureRecognizer!
     
     @IBOutlet weak var buttonPaneView: AutoAlignPaneView!
     
@@ -25,49 +28,57 @@ class NoteViewController: UIViewController, UINavigationControllerDelegate {
     
     @IBOutlet weak var showAdditionalButtons: UIButton!
     @IBOutlet weak var showAdditionalButtonsBottomPadding: NSLayoutConstraint!
+    var kbHeight : CGFloat = 0
     
     weak var delegate : NoteViewControllerDelegate?
     
     var notebook : Notebook!
     var note: Note?
+    private var thumbnailImageURL : String?
     
-    weak var newNoteIcon, newPhotoIcon, newBrushIcon, deleteNoteIcon : UIButton!;
+    @IBOutlet weak var newNoteIcon : UIButton!
+    @IBOutlet weak var newPhotoIcon : UIButton!
+    @IBOutlet weak var newDrawingIcon : UIButton!
+    @IBOutlet weak var deleteNoteIcon : UIButton!
     
     override func viewDidLoad() {
         self.textView.delegate = self
-        saveButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.Done, target: self, action: #selector(NoteViewController.saveNote(_:)))
+        if note == nil{
+            title = NSLocalizedString("new_note", comment: "")
+        }else{
+            title = ""
+        }
+        saveButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.Done, target: self, action: #selector(NoteViewController.doneClicked(_:)))
         self.textView.contentInset = UIEdgeInsetsMake(0, 0, 47, 0)
         self.buttonPaneView.backgroundColor = UIColor(white: 0.95, alpha: 0.92)
         super.viewDidLoad()
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(NoteViewController.keyboardWillShow(_:)), name: UIKeyboardWillShowNotification, object: nil)
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(NoteViewController.keyboardWillHide(_:)), name: UIKeyboardWillHideNotification, object: nil)
-        newNoteIcon = self.buttonPaneView.subViewArray[0] as! UIButton
+        deleteNoteIcon = self.buttonPaneView.subViewArray[0] as! UIButton        
         newPhotoIcon = self.buttonPaneView.subViewArray[1] as! UIButton
-        newBrushIcon = self.buttonPaneView.subViewArray[2] as! UIButton
-        deleteNoteIcon = self.buttonPaneView.subViewArray[3] as! UIButton
+        newDrawingIcon = self.buttonPaneView.subViewArray[2] as! UIButton
+        newNoteIcon = self.buttonPaneView.subViewArray[3] as! UIButton
+        textView.addGestureRecognizer(tapGestureRecognizer)
         showAdditionalButtons.hidden = true
-        
         if let existingNote = note{
             self.textView.attributedText = existingNote.content
         }else{
-            addDummyText()
+            self.textView.becomeFirstResponder()
+            newNoteIcon.enabled = false
         }
-    }
-    
-    func addDummyText(){
-        let textToShow = "Chances are, there is some line with maybe one single comma in there, or none, or an empty line, whatever. Probably just put a try-except statement around the statement and catch the index error, probably printing out the line in question, and you should be done. Besides that, there are some things in your code, that might be worth to improve."
-        let attribText = NSMutableAttributedString(string: textToShow)
-        attribText.addAttribute(NSFontAttributeName, value: UIFont.boldSystemFontOfSize(15), range: NSMakeRange(0, 20))
-        textView.attributedText = attribText
-        addImageToTextView(UIImage(named: "wwdc"), atRange: NSMakeRange(50,0))
     }
     
     func addImageToTextView(image : UIImage?, atRange range : NSRange){
+        addImageToTextView(image, atRange: range, attachmentClass: NoteTextAttachment.self)
+    }
+    
+    func addImageToTextView(image : UIImage?, atRange range : NSRange, attachmentClass : NoteTextAttachment.Type) -> NoteTextAttachment?{
         guard let imageToAdd = image else{
-            return
+            return nil
         }
         if let savedImageName = CommonHelper.savePhotoToLocalDirectory(imageToAdd){
-            let imageAttachment = NoteTextAttachment()
+            isEdited = true
+            let imageAttachment = attachmentClass.init()
             imageAttachment.imageName = savedImageName
             imageAttachment.image = imageToAdd
             let attribStr = NSMutableAttributedString(string: "\n\n")
@@ -77,7 +88,9 @@ class NoteViewController: UIViewController, UINavigationControllerDelegate {
                 textViewAttribText.replaceCharactersInRange(range, withAttributedString: attribStr)
                 self.textView.attributedText = textViewAttribText
             }
+            return imageAttachment
         }
+        return nil
     }
     
     override func viewWillDisappear(animated: Bool) {
@@ -86,21 +99,50 @@ class NoteViewController: UIViewController, UINavigationControllerDelegate {
     }
     
     private func extractTitle() -> String{
-        return self.textView.text.substringToIndex(self.textView.text.startIndex.advancedBy(min(15,self.textView.text.characters.count)))
+        if self.textView.attributedText.length > 0{
+            let first50Text = textView.attributedText.getFirstStrippedCharacters(50)
+            if first50Text.characters.count > 0{
+                return first50Text
+            }
+            return NSLocalizedString("new_note", comment: "")
+        }
+        return ""
+    }
+    
+    
+    @IBAction func doneClicked(sender : AnyObject?){
+        self.navigationItem.rightBarButtonItem = nil
+        if !isEdited && note == nil{
+            navigationController?.popViewControllerAnimated(true)
+        }else{
+            textView.resignFirstResponder()
+        }
     }
     
     @IBAction func saveNote(sender : AnyObject?){
-        textView.resignFirstResponder()
-        self.navigationItem.rightBarButtonItem = nil
+        if !isEdited{
+            return
+        }
         let managedObjectContext = AppDelegate.sharedAppDelegate.managedObjectContext
         let curDate = NSDate()
         if let curNote = note{
-            curNote.content = self.textView.attributedText
-            curNote.title = extractTitle()
-            curNote.updated_at = curDate
-            if let _ = try? managedObjectContext.save(){
+            if textView.attributedText.length > 0 {
+                curNote.content = textView.attributedText
+                curNote.title = extractTitle()
+                curNote.updated_at = curDate
+                curNote.thumbnail_url = textView.attributedText.getFirstAttachment()?.imageName
+            }else{
+                notebook.deleteNote(curNote)
+                note = nil
             }
-        }else{
+            if let _ = try? managedObjectContext.save(){
+                if note == nil{
+                    delegate?.noteDeleted(curNote)
+                }else{
+                    delegate?.noteUpdated(curNote)
+                }
+            }
+        }else if textView.attributedText.length > 0{
             let entity = NSEntityDescription.entityForName("Note", inManagedObjectContext: managedObjectContext)
             let newNote = NSManagedObject(entity: entity!, insertIntoManagedObjectContext: managedObjectContext) as! Note
             newNote.content = self.textView.attributedText
@@ -108,12 +150,33 @@ class NoteViewController: UIViewController, UINavigationControllerDelegate {
             newNote.created_at = curDate
             newNote.updated_at = curDate
             newNote.in_notebook = notebook
-            notebook.numberOfNotes = NSNumber(int: notebook.numberOfNotes!.intValue+1)
-            notebook.mutableSetValueForKey("notes").addObject(newNote)
+            newNote.thumbnail_url = textView.attributedText.getFirstAttachment()?.imageName
+            notebook.addNote(newNote)
             if let _ = try? managedObjectContext.save(){
+                note = newNote
+                delegate?.noteCreated(newNote)
             }
         }
     }
+    
+    @IBAction func deleteNote(sender : AnyObject){
+        if let curNote = note{
+            let context = AppDelegate.sharedAppDelegate.managedObjectContext
+            notebook.deleteNote(curNote)
+            if let _ = try? context.save(){
+                delegate?.noteDeleted(curNote)
+                navigationController?.popViewControllerAnimated(true)
+            }
+        }
+    }
+    
+    @IBAction func createNewNote(sender: AnyObject) {
+        note = nil
+        textView.text = ""
+        isEdited = true //in this case, we dun wanna go back to previous page
+        textView.becomeFirstResponder()
+    }
+    
     
     deinit{
         NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillShowNotification, object: nil)
@@ -122,27 +185,35 @@ class NoteViewController: UIViewController, UINavigationControllerDelegate {
     
     @IBAction func keyboardWillShow(notification : NSNotification){
         if let userInfo = notification.userInfo as? Dictionary<String,AnyObject>, keyboardRect = (userInfo[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.CGRectValue(){
+            kbHeight = keyboardRect.size.height
             textViewBottomConstraint.constant = keyboardRect.size.height
-            self.buttonPaneViewBottomPadding.constant = keyboardRect.size.height
-            self.showAdditionalButtonsBottomPadding.constant = keyboardRect.size.height + 5
-            self.buttonPaneView.paddingRight = 50
-            self.showAdditionalButtons.hidden = false
+            UIView.animateWithDuration(0.25, animations: { 
+                self.showAdditionalButtonsBottomPadding.constant = keyboardRect.size.height + 5
+                self.showAdditionalButtons.hidden = false
+                self.view.layoutIfNeeded()
+            })
             self.view.setNeedsLayout()
             self.view.layoutIfNeeded()
             self.deleteNoteIcon.hidden = true
             self.newNoteIcon.hidden = true
-            self.buttonPaneView.updateView()
+            self.buttonPaneView.paddingRight = 50
+            if !CGAffineTransformIsIdentity(self.showAdditionalButtons.transform){//actions shown on top of keyboard and update only if it is already show demand
+                showActionPaneOnKeyboard(true)
+            }
         }
         self.navigationItem.rightBarButtonItem = saveButtonItem
     }
     
     @IBAction func keyboardWillHide(notification : NSNotification){
         textViewBottomConstraint.constant = 0
+        kbHeight = 0
         self.buttonPaneViewBottomPadding.constant = 0
         self.showAdditionalButtons.hidden = true
+        self.buttonPaneView.paddingRight = 0
         self.deleteNoteIcon.hidden = false
         self.newNoteIcon.hidden = false
-        self.buttonPaneView.updateView()
+        self.buttonPaneView.paddingRight = 0
+        self.showAdditionalButtons.transform = CGAffineTransformIdentity
     }
     
     func showMediaWithType(sourceType: UIImagePickerControllerSourceType){
@@ -171,6 +242,7 @@ class NoteViewController: UIViewController, UINavigationControllerDelegate {
     
     @IBAction func addDrawing(sender: AnyObject) {
         let drawingVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewControllerWithIdentifier("DrawingViewController") as! DrawingViewController
+        drawingVC.delegate = self
         presentViewController(drawingVC, animated: true, completion: nil)
     }
 
@@ -178,15 +250,58 @@ class NoteViewController: UIViewController, UINavigationControllerDelegate {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
+    
+    func showActionPaneOnKeyboard(show : Bool) {
+        if show{
+            self.buttonPaneViewBottomPadding.constant = self.kbHeight-self.buttonPaneView.bounds.size.height
+            UIView.animateWithDuration(0.25, animations: {
+                self.showAdditionalButtons.transform = CGAffineTransformRotate(CGAffineTransformIdentity, CGFloat(-45.0/180*M_PI))
+                self.buttonPaneViewBottomPadding.constant = self.kbHeight
+                self.view.layoutIfNeeded()
+                }, completion: { (finished) in
+                    self.buttonPaneView.updateView()
+            })
+        }else{
+            UIView.animateWithDuration(0.25, animations: {
+                self.showAdditionalButtons.transform = CGAffineTransformIdentity
+                self.buttonPaneViewBottomPadding.constant = self.kbHeight-self.buttonPaneView.bounds.size.height
+                self.view.layoutIfNeeded()
+                }, completion: { (finished) in
+                    self.buttonPaneViewBottomPadding.constant = 0
+                    self.buttonPaneView.updateView()
+            })
+        }
+    }
+    
+    @IBAction func showAdditionButtonClicked(sender: UIButton) {
+        showActionPaneOnKeyboard(CGAffineTransformIsIdentity(sender.transform))
+    }
+}
+
+extension NoteViewController: DrawingViewControllerDelegate{
+    func drawingViewControllerWillClose(drawingViewController: DrawingViewController) {
+        if drawingViewController.drawingPane.isDirty{
+            var selectedRange = self.textView.selectedRange
+            if drawingViewController.attachmentRange != nil{
+                selectedRange = drawingViewController.attachmentRange!
+                if let prevAttachment = drawingViewController.drawingImageName{
+                    CommonHelper.deletePhotoWithName(prevAttachment)
+                }
+            }
+            if let drawingAttachment = addImageToTextView(drawingViewController.drawingImage, atRange: selectedRange, attachmentClass: NoteDrawingAttachment.self) as? NoteDrawingAttachment{
+                drawingAttachment.drawingBounds = drawingViewController.drawingBounds
+                drawingAttachment.canvasSize = drawingViewController.drawingPane.getCanvasSize()
+            }
+        }
+    }
 }
 
 extension NoteViewController: UIImagePickerControllerDelegate{
     //MARK: - UIImagePickerControllerDelegate
     func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : AnyObject]) {
-        let selectedImage = info[UIImagePickerControllerOriginalImage] as? UIImage
-        let resizedImage = selectedImage?.imageWithMaxWidth(self.textView.bounds.size.width)
-        print(resizedImage)
-        addImageToTextView(resizedImage, atRange: self.textView.selectedRange)
+        let selectedImage = (info[UIImagePickerControllerOriginalImage] as? UIImage)?.normalizeOrientation()
+//        let resizedImage = selectedImage?.imageWithMaxWidth(self.textView.bounds.size.width)
+        addImageToTextView(selectedImage, atRange: self.textView.selectedRange)
         dismissViewControllerAnimated(true, completion: nil)
     }
 }
@@ -194,11 +309,11 @@ extension NoteViewController: UIImagePickerControllerDelegate{
 
 extension NoteViewController :  UITextViewDelegate{
     func textView(textView: UITextView, shouldInteractWithTextAttachment textAttachment: NSTextAttachment, inRange characterRange: NSRange) -> Bool {
-        print(textAttachment)
         return true
     }
     
     func textView(textView: UITextView, shouldChangeTextInRange range: NSRange, replacementText text: String) -> Bool {
+        isEdited = true
         if let allAttachments = textView.attributedText.getAllAttachmentsInRange(range){
             for curAttachment in allAttachments{
                 CommonHelper.deletePhotoWithName(curAttachment.imageName)
@@ -207,31 +322,69 @@ extension NoteViewController :  UITextViewDelegate{
         return true
     }
     
-    func textViewDidChange(textView: UITextView) {
-        print("textViewDidChange")
-        
-    }
-    
     func textViewDidChangeSelection(textView: UITextView) {
-        print("textViewDidChangeSelection with selected range \(textView.selectedRange)")
-        if let textAttachment = getAttachmentForSelectedRange(textView.selectedRange) where textAttachment.imageName != nil{
-            textView.resignFirstResponder()
-            let photoVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewControllerWithIdentifier("PhotoViewController") as! PhotoViewController
-            photoVC.imageName = textAttachment.imageName
-            presentViewController(photoVC, animated: true, completion: nil)
-            //open photoviewer
-        }
+        print("SelectedRange \(textView.selectedRange)")
     }
     
-    func getAttachmentForSelectedRange(curSelRange : NSRange) -> NoteTextAttachment?{
+    func getAttachmentForSelectedPosition(selPosition : Int) -> (NoteTextAttachment, NSRange)?{
         var longestRange = NSRange()
-        if curSelRange.location + curSelRange.length < self.textView.attributedText.length{
-            let attribDict = self.textView.attributedText.attributesAtIndex(max(curSelRange.location-1,0), longestEffectiveRange:&longestRange, inRange: NSMakeRange(0,self.textView.attributedText.length))
-            return attribDict[NSAttachmentAttributeName] as? NoteTextAttachment
+        let posOfInterest = max(min(selPosition, textView.attributedText.length-1),0)
+        let attribDict = self.textView.attributedText.attributesAtIndex(posOfInterest, longestEffectiveRange:&longestRange, inRange: NSMakeRange(0,self.textView.attributedText.length))
+        if let attachment = attribDict[NSAttachmentAttributeName] as? NoteTextAttachment{
+            if longestRange.location > 0{
+                longestRange.location -= 1
+                longestRange.length += 2
+            }else{
+                longestRange.length += 1
+            }
+            return (attachment,longestRange)
         }
         return nil
     }
     
+    func searchAttachmentNearPosition(selPosition : Int) -> (NoteTextAttachment, NSRange)?{
+        if let attachment = getAttachmentForSelectedPosition(selPosition){
+            return attachment
+        }
+        return getAttachmentForSelectedPosition(selPosition-1)
+    }
+}
+
+extension NoteViewController : UIGestureRecognizerDelegate{
+    func gestureRecognizer(gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWithGestureRecognizer otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        if gestureRecognizer == tapGestureRecognizer || otherGestureRecognizer == tapGestureRecognizer{
+            return true
+        }
+        return false
+    }
     
+    @IBAction func textViewTouched(sender: UITapGestureRecognizer) {
+        let posInTextView = sender.locationInView(textView)
+        if let textPos = textView.closestPositionToPoint(posInTextView){
+            let startIndex = textView.offsetFromPosition(textView.beginningOfDocument, toPosition: textPos)
+            print("startIndex \(startIndex)")
+            if let (textAttachment,attachmentRange) = searchAttachmentNearPosition(startIndex) where textAttachment.imageName != nil{
+                textView.resignFirstResponder()
+                if let photoDocumentPath = CommonHelper.getPhotoFolder(){
+                    if let imageData = NSData(contentsOfFile: photoDocumentPath + "/" + textAttachment.imageName!), curImage = UIImage(data: imageData){
+                        if let drawingAttachment = textAttachment as? NoteDrawingAttachment{
+                            let drawingVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewControllerWithIdentifier("DrawingViewController") as! DrawingViewController
+                            drawingVC.drawingImage = curImage
+                            drawingVC.delegate = self
+                            drawingVC.attachmentRange = attachmentRange
+                            drawingVC.drawingImageName = textAttachment.imageName
+                            drawingVC.drawingBounds = drawingAttachment.drawingBounds
+                            drawingVC.prevCanvasSize = drawingAttachment.canvasSize
+                            presentViewController(drawingVC, animated: true, completion: nil)
+                        }else{
+                            let photoVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewControllerWithIdentifier("PhotoViewController") as! PhotoViewController
+                            photoVC.image = curImage
+                            presentViewController(photoVC, animated: true, completion: nil)
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 

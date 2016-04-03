@@ -11,7 +11,23 @@ import CoreData
 
 
 class Note: NSManagedObject {
-
-// Insert code here to add functionality to your managed object subclass
+    
+    override func prepareForDeletion() {
+        super.prepareForDeletion()
+        if let allAttachments = content?.getAllAttachments(){
+            for curAttachment in allAttachments{
+                CommonHelper.deletePhotoWithName(curAttachment.imageName)
+            }
+        }
+        if let noOfNote = in_notebook?.numberOfNotes?.intValue where noOfNote > 0{
+            in_notebook?.numberOfNotes = noOfNote - 1
+        }else{
+            in_notebook?.numberOfNotes =  0
+        }
+    }
+    
+    func getTitle() -> String {
+        return title == nil ? "" : title!
+    }
 
 }

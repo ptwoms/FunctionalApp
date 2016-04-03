@@ -6,12 +6,27 @@
   Copyright © 2016 PYAE PHYO MYINT SOE. All rights reserved.
 */
 
-"new_notebook" = "New Notebook";
-"error" = "Error";
-"notebooks" = "Notebooks";
-"notebook_already_exists" = "Notebook with the same name already exists!";
+
+"new_notebook" = "မှတ်စုစာအုပ်အသစ်";
+"error" = "အမှား";
+"notebooks" = "မှတ်စုစာအုပ်များ";
+"notebook_already_exists" = "အမည်တူမှတ်စုစာအုပ်ရှိပြီးနေပြီ";
 "notebook_name" = "မှတ်စုစာအုပ်နာမည်";
-"enter_name_for_notebook" = "Enter a name for the notebook";
+"enter_name_for_notebook" = "မှတ်စုစာအုပ်အတွက်နံမယ်ကိုရိုက်ထည့်ပါ။";
 "save" = "သိမ်းရန်";
 "cancel" = "ဖျက်သိမ်း";
 "ok" = "အိုကေ";
+
+"delete" = "ဖျက်ရန်";
+"warning" = "သတိပေးချက်";
+"new_note" = "မှတ်စုအသစ်";
+"take_photo" = "ဓာတ်ပုံရိုက်";
+"photo_library" = "ဓာတ်ပုံအယ်လ်ဘမ်";
+"close" = "ပိတ်ရန်";
+"yesterday" = "မနေ့က";
+"one_note" = "%d မှတ်စု";
+"x_notes" = "%d မှတ်စု";
+"x_and_more" = "%@ နှင့် အခြား %d အုပ်";
+"enter_new_name_for_notebook" = "ဒီမှတ်စုစာအုပ်အတွက်နံမယ်အသစ်ကိုရိုက်ထည့်ပါ။";
+"rename_notebook" = "မှတ်စုစာအုပ်နံမယ်ပေြာင်း";
+"rename" = "နံမယ်ပေြာင်း";

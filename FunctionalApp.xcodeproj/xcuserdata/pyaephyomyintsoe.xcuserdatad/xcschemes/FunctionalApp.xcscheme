@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "993604711C8F24E3003B5210"
-               BuildableName = "FunctionalApp.app"
+               BuildableName = "My Note.app"
                BlueprintName = "FunctionalApp"
                ReferencedContainer = "container:FunctionalApp.xcodeproj">
             </BuildableReference>
@@ -43,7 +43,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "993604711C8F24E3003B5210"
-            BuildableName = "FunctionalApp.app"
+            BuildableName = "My Note.app"
             BlueprintName = "FunctionalApp"
             ReferencedContainer = "container:FunctionalApp.xcodeproj">
          </BuildableReference>
@@ -66,7 +66,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "993604711C8F24E3003B5210"
-            BuildableName = "FunctionalApp.app"
+            BuildableName = "My Note.app"
             BlueprintName = "FunctionalApp"
             ReferencedContainer = "container:FunctionalApp.xcodeproj">
          </BuildableReference>
@@ -92,7 +92,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "993604711C8F24E3003B5210"
-            BuildableName = "FunctionalApp.app"
+            BuildableName = "My Note.app"
             BlueprintName = "FunctionalApp"
             ReferencedContainer = "container:FunctionalApp.xcodeproj">
          </BuildableReference>

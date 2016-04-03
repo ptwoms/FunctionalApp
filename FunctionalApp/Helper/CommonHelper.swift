@@ -39,16 +39,28 @@ class CommonHelper: NSObject {
         alertWindow?.rootViewController?.presentViewController(alertCtrl, animated: true, completion: nil)
     }
     
+    /* Photo Related */
     static func deletePhotoWithName(imageName : String?) -> Bool{
         if let curImgName = imageName, imagesFolderPath = getPhotoFolder(){
             do{
-                try NSFileManager.defaultManager().removeItemAtPath(imagesFolderPath + "/" + curImgName)
+                let fileManager = NSFileManager.defaultManager()
+                try fileManager.removeItemAtPath(imagesFolderPath + "/" + curImgName)
+                if let thumbFolder = getThumbPhotoFolder(){
+                    try fileManager.removeItemAtPath(thumbFolder + "/" + curImgName)
+                }
                 return true
             }catch{
                 
             }
         }
         return false
+    }
+    
+    static func getThumbnailPhotoWithName(imageName : String?) -> UIImage?{
+        if let curImgName = imageName, imagesFolderPath = getThumbPhotoFolder(){
+            return UIImage(contentsOfFile: imagesFolderPath + "/" + curImgName)?.imageFitToSize(GlobalConstants.noteThumbnailSize)
+        }
+        return nil
     }
     
     static func getPhotoFolder() -> String?{
@@ -58,18 +70,36 @@ class CommonHelper: NSObject {
         return nil
     }
     
+    static func getThumbPhotoFolder() -> String?{
+        if let documentFolder = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true).first{
+            return (documentFolder as NSString).stringByAppendingPathComponent("images/thumbnails/")
+        }
+        return nil
+    }
+    
+    static func createFlolderIfNecessary(folderPath : String) throws{
+        let fileManager = NSFileManager.defaultManager()
+        if !fileManager.fileExistsAtPath(folderPath){
+            try fileManager.createDirectoryAtPath(folderPath, withIntermediateDirectories: false, attributes: nil)
+        }
+    }
+    
     static func savePhotoToLocalDirectory(imageToSave : UIImage) -> String?{
-        if let imagesFolderPath = getPhotoFolder(){
-            let fileManager = NSFileManager.defaultManager()
-            if !fileManager.fileExistsAtPath(imagesFolderPath){
-                do{
-                    try fileManager.createDirectoryAtPath(imagesFolderPath, withIntermediateDirectories: false, attributes: nil)
-                }catch{
-                    return nil
-                }
+        if let imagesFolderPath = getPhotoFolder(), thumbnailFolderPath = getThumbPhotoFolder(){
+            do{
+               try createFlolderIfNecessary(imagesFolderPath)
+               try createFlolderIfNecessary(thumbnailFolderPath)
+            }catch{
+                return nil
             }
-            let pngData = UIImagePNGRepresentation(imageToSave)
+            
             let newPhotoName = getNewUniquePhotoName()
+            if let thumbImage = imageToSave.resizeImageToSize(GlobalConstants.noteThumbnailSize){
+                let thumbnailData = UIImagePNGRepresentation(thumbImage)
+                thumbnailData?.writeToFile(thumbnailFolderPath + "/" + newPhotoName, atomically: true)
+            }
+            
+            let pngData = UIImagePNGRepresentation(imageToSave)
             if let _ = pngData?.writeToFile(imagesFolderPath + "/" + newPhotoName, atomically: true){
                 return newPhotoName
             }

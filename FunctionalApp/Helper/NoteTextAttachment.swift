@@ -12,18 +12,10 @@ class NoteTextAttachment: NSTextAttachment {
     override var image : UIImage?{
         didSet{
             self.imageSize = image?.size
+            self.imageScale = image?.scale == nil ? 1 : Float(image!.scale)
         }
     }
-//    override func imageForBounds(imageBounds: CGRect, textContainer: NSTextContainer?, characterIndex charIndex: Int) -> UIImage? {
-//        let image = super.imageForBounds(imageBounds, textContainer: textContainer, characterIndex: charIndex)
-//        NSLog("imageBounds \(imageBounds)")
-//        NSLog("textContainer \(textContainer?.size)")
-//        if let containerSize = textContainer?.size where imageBounds.size.width > textContainer?.size.width{
-//            return image?.imageWithMaxWidth(containerSize.width)
-//        }
-//        return image
-//    }
-//
+    
     override init(data contentData: NSData?, ofType uti: String?) {
         super.init(data: contentData, ofType: uti)
     }
@@ -37,6 +29,9 @@ class NoteTextAttachment: NSTextAttachment {
         if aDecoder.containsValueForKey("imageName"){
             self.imageName = aDecoder.decodeObjectForKey("imageName") as? String
         }
+        if aDecoder.containsValueForKey("imageScale"){
+            self.imageScale = aDecoder.decodeFloatForKey("imageScale")
+        }
     }
     
     override func encodeWithCoder(aCoder: NSCoder) {
@@ -47,19 +42,17 @@ class NoteTextAttachment: NSTextAttachment {
         if let imgPath = self.imageName{
             aCoder.encodeObject(imgPath, forKey: "imageName")
         }
+        aCoder.encodeFloat(imageScale, forKey: "imageScale")
     }
     
     var imageSize : CGSize?
+    var imageScale : Float = 1
     var imageName : String?
     override func attachmentBoundsForTextContainer(textContainer: NSTextContainer?, proposedLineFragment lineFrag: CGRect, glyphPosition position: CGPoint, characterIndex charIndex: Int) -> CGRect {
         var curRect = super.attachmentBoundsForTextContainer(textContainer, proposedLineFragment: lineFrag, glyphPosition: position, characterIndex: charIndex)
-        NSLog("textContainer \(textContainer?.size)")
-        NSLog("curRect \(curRect)")
-        NSLog("curImage \(image)")
-        NSLog("imageSize \(imageSize)")
         if let containerSize = textContainer?.size, imgSize = self.imageSize{
-            curRect.size.width = containerSize.width
-            curRect.size.height = (containerSize.width/imgSize.width) * imgSize.height
+            curRect.size.width = containerSize.width-10//minus lineFragmentPadding
+            curRect.size.height = (curRect.size.width/imgSize.width) * imgSize.height
         }
         return curRect
     }

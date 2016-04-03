@@ -18,4 +18,14 @@
 
 "delete" = "Delete";
 "warning" = "Warning";
-"delete_notebook_message" = "Deleting notebook will delete all the notes inside.\nAre you sure to delete it?";
+"new_note" = "New Note";
+"take_photo" = "Take Photo";
+"photo_library" = "Photo Library";
+"close" = "Close";
+"yesterday" = "Yesterday";
+"one_note" = "%d note";
+"x_notes" = "%d notes";
+"x_and_more" = "%@ and %d more";
+"enter_new_name_for_notebook" = "Enter a new name for this notebook.";
+"rename_notebook" = "Rename Notebook";
+"rename" = "Rename";

@@ -15,6 +15,11 @@ extension UIView{
         return newView
     }
     
+    func roundCorner(cornerRadius : CGFloat) {
+        self.clipsToBounds = true
+        self.layer.cornerRadius = cornerRadius
+    }
+    
     func removeAllSubViews(){
         for subView in self.subviews{
             subView.removeFromSuperview()

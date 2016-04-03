@@ -17,23 +17,17 @@ class PhotoViewController: UIViewController, UIScrollViewDelegate {
     @IBOutlet weak var contentScrollView: UIScrollView!
     
     private var imageSize = CGSizeZero;
-    var imageName : String!{
+    
+    var image : UIImage!{
         didSet{
-            if imageView != nil{
-                updatePhoto()
+            imageSize = image.size
+            imageSize.width *= image.scale
+            imageSize.height *= image.scale
+            if self.imageView != nil{
+                self.imageView?.image = image
                 initializeZoomScales()
             }
-        }
-    }
-    
-    private func updatePhoto(){
-        if let documentPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true).first{
-            if let imageData = NSData(contentsOfFile: documentPath + "/images/" + imageName), curImage = UIImage(data: imageData){
-                imageSize = curImage.size
-                imageSize.width *= curImage.scale
-                imageSize.height *= curImage.scale
-                self.imageView.image = curImage
-            }
+            
         }
     }
     
@@ -41,7 +35,7 @@ class PhotoViewController: UIViewController, UIScrollViewDelegate {
         super.viewDidLoad()
         edgesForExtendedLayout = UIRectEdge.None
         self.closeButton.title = NSLocalizedString("close", comment: "")
-        updatePhoto()
+        imageView.image = image
     }
     
     override func viewWillAppear(animated: Bool) {

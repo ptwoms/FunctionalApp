@@ -8,9 +8,9 @@
 
 import UIKit
 
-class NoteDrawingAttachment: NSTextAttachment {
-    var drawingBound = CGRectZero
-    var imageName : String?
+class NoteDrawingAttachment: NoteTextAttachment {
+    var drawingBounds = CGRectZero
+    var canvasSize = CGSizeZero
     
     override init(data contentData: NSData?, ofType uti: String?) {
         super.init(data: contentData, ofType: uti)
@@ -19,18 +19,14 @@ class NoteDrawingAttachment: NSTextAttachment {
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
-        self.drawingBound = aDecoder.decodeCGRectForKey("drawingBound")
-        if aDecoder.containsValueForKey("imageName"){
-            self.imageName = aDecoder.decodeObjectForKey("imageName") as? String
-        }
+        drawingBounds = aDecoder.decodeCGRectForKey("drawingBounds")
+        canvasSize = aDecoder.decodeCGSizeForKey("canvasSize")
     }
     
     override func encodeWithCoder(aCoder: NSCoder) {
         super.encodeWithCoder(aCoder)
-        aCoder.encodeCGRect(drawingBound, forKey: "drawingBound")
-        if let imgPath = self.imageName{
-            aCoder.encodeObject(imgPath, forKey: "imageName")
-        }
+        aCoder.encodeCGRect(drawingBounds, forKey: "drawingBounds")
+        aCoder.encodeCGSize(canvasSize, forKey: "canvasSize")
     }
     
 }

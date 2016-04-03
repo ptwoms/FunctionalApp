@@ -19,6 +19,7 @@ extension Note {
     @NSManaged var created_at: NSDate?
     @NSManaged var updated_at: NSDate?
     @NSManaged var note_id: String?
+    @NSManaged var thumbnail_url: String?
     @NSManaged var in_notebook: Notebook?
     @NSManaged var photos: NSSet?
 

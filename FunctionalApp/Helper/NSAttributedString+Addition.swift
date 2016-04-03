@@ -9,21 +9,66 @@
 import UIKit
 
 extension NSAttributedString{
+    func getAllAttachments() -> [NoteTextAttachment]? {
+        return getAllAttachmentsInRange(NSMakeRange(0, length))
+    }
+    
+    func getFirstStrippedCharacters(count : Int) -> String {
+        var curIndex = 0
+        let finalLoc = self.length
+        var rangePtr = NSRange()
+        var finalString = ""
+        while curIndex < finalLoc {
+            let attributes = attributesAtIndex(curIndex, effectiveRange: &rangePtr)
+            if (attributes[NSAttachmentAttributeName] as? NSTextAttachment) == nil{
+                let firstIndex = string.startIndex.advancedBy(rangePtr.location)
+                let endIndex = firstIndex.advancedBy(rangePtr.length)
+                let strOfInterest = string.substringWithRange(firstIndex..<endIndex)
+                if finalString == ""{
+                    let firstStr = ((strOfInterest + "a").stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet()))
+                    finalString = firstStr.substringToIndex(firstStr.endIndex.predecessor())
+                }else{
+                    finalString = finalString + strOfInterest
+                }
+                if finalString.characters.count >= count{
+                    return finalString.substringToIndex(finalString.startIndex.advancedBy(count))
+                }
+            }
+            curIndex = rangePtr.location + rangePtr.length
+        }
+        return finalString
+    }
+    
     func getAllAttachmentsInRange(range : NSRange) -> [NoteTextAttachment]? {
         var curIndex = range.location
         let finalLoc = range.location + range.length
         if length > 0 && curIndex < length{
             var allAttachments = [NoteTextAttachment]()
+            var rangePtr = NSRange()
             repeat{
-                var rangePtr = NSRange()
                 let attributes = attributesAtIndex(curIndex, effectiveRange: &rangePtr)
                 if let attachment = attributes[NSAttachmentAttributeName] as? NoteTextAttachment{
-                    print("Image in the selection \(attachment.imageName)")
                     allAttachments.append(attachment)
                 }
                 curIndex = rangePtr.location + rangePtr.length
             }while curIndex < length && curIndex < finalLoc
             return allAttachments
+        }
+        return nil
+    }
+    
+    func getFirstAttachment() -> NoteTextAttachment? {
+        var curIndex = 0
+        let finalLoc = self.length
+        if length > 0 && curIndex < length{
+            var rangePtr = NSRange()
+            repeat{
+                let attributes = attributesAtIndex(curIndex, effectiveRange: &rangePtr)
+                if let attachment = attributes[NSAttachmentAttributeName] as? NoteTextAttachment{
+                    return attachment
+                }
+                curIndex = rangePtr.location + rangePtr.length
+            }while curIndex < finalLoc
         }
         return nil
     }
@@ -35,28 +80,4 @@ extension NSAttributedString{
             }
         }
     }
-    
-//    func resizeAllAttachments(contentMaxWidth : CGFloat){
-//        if self.length > 0{
-//            var curIndex : Int = 0
-//            let maxRange = NSMakeRange(0, self.length)
-//            repeat{
-//                var rangePointer = NSRange()
-//                let attributes = attributesAtIndex(curIndex, longestEffectiveRange: &rangePointer, inRange: maxRange)
-//                NSLog("Attributes \(attributes)")
-//                if let attachment = attributes[NSAttachmentAttributeName] as? NSTextAttachment, curImage = attachment.image{
-//                    let imageSize = curImage.size
-//                    if imageSize.width < contentMaxWidth{
-//                        let resizeRatio = contentMaxWidth/imageSize.height
-//                        var newBounds = attachment.bounds
-//                        newBounds.size.width = contentMaxWidth
-//                        newBounds.size.height = resizeRatio*imageSize.height
-//                        attachment.bounds = newBounds
-//                    }else{
-//                    }
-//                }
-//                curIndex = rangePointer.location + rangePointer.length
-//            }while curIndex < self.length
-//        }
-//    }
 }
